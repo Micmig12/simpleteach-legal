@@ -1,31 +1,31 @@
 import SwiftUI
 
-struct ContentView: View {
-    @State private var selectedTab: Tab = .dashboard
-    @Environment(\.horizontalSizeClass) private var sizeClass
+enum SidebarItem: String, CaseIterable, Hashable {
+    case dashboard, scan, history
 
-    enum Tab: String, CaseIterable {
-        case dashboard, scan, history
-
-        var title: String {
-            switch self {
-            case .dashboard: return "Painel"
-            case .scan: return "Escanear"
-            case .history: return "Histórico"
-            }
-        }
-        var icon: String {
-            switch self {
-            case .dashboard: return "chart.bar.fill"
-            case .scan: return "camera.viewfinder"
-            case .history: return "clock.fill"
-            }
+    var title: String {
+        switch self {
+        case .dashboard: return "Painel"
+        case .scan:      return "Escanear"
+        case .history:   return "Histórico"
         }
     }
+    var icon: String {
+        switch self {
+        case .dashboard: return "chart.pie.fill"
+        case .scan:      return "camera.viewfinder"
+        case .history:   return "clock.fill"
+        }
+    }
+}
+
+struct ContentView: View {
+    @State private var selection: SidebarItem? = .dashboard
+    @Environment(\.horizontalSizeClass) private var sizeClass
 
     var body: some View {
         ZStack {
-            backgroundGradient
+            EcoMeshBackground()
 
             if sizeClass == .regular {
                 ipadLayout
@@ -35,68 +35,46 @@ struct ContentView: View {
         }
     }
 
-    // iPad: NavigationSplitView with sidebar
+    // iPad: NavigationSplitView com sidebar
     private var ipadLayout: some View {
         NavigationSplitView {
-            sidebar
+            List(SidebarItem.allCases, id: \.self, selection: $selection) { item in
+                Label(item.title, systemImage: item.icon)
+                    .font(.headline)
+                    .foregroundStyle(.white)
+                    .padding(.vertical, 6)
+            }
+            .listStyle(.sidebar)
+            .scrollContentBackground(.hidden)
+            .background(.ultraThinMaterial)
+            .navigationTitle("EcoScan")
         } detail: {
-            detailView(for: selectedTab)
+            detailView(for: selection ?? .dashboard)
         }
         .navigationSplitViewStyle(.balanced)
     }
 
     // iPhone: TabView
     private var iphoneLayout: some View {
-        TabView(selection: $selectedTab) {
-            ForEach(Tab.allCases, id: \.self) { tab in
+        TabView(selection: $selection) {
+            ForEach(SidebarItem.allCases, id: \.self) { item in
                 NavigationStack {
-                    detailView(for: tab)
+                    detailView(for: item)
                 }
-                .tabItem {
-                    Label(tab.title, systemImage: tab.icon)
-                }
-                .tag(tab)
+                .tabItem { Label(item.title, systemImage: item.icon) }
+                .tag(item as SidebarItem?)
             }
         }
         .tint(.mint)
     }
 
-    private var sidebar: some View {
-        List(Tab.allCases, id: \.self, selection: $selectedTab) { tab in
-            Label(tab.title, systemImage: tab.icon)
-                .tag(tab)
-                .font(.body)
-                .padding(.vertical, 4)
-        }
-        .navigationTitle("EcoScan")
-        .listStyle(.sidebar)
-        .scrollContentBackground(.hidden)
-        .background(.ultraThinMaterial)
-    }
-
     @ViewBuilder
-    private func detailView(for tab: Tab) -> some View {
-        ZStack {
-            backgroundGradient
-            switch tab {
-            case .dashboard: DashboardView()
-            case .scan: ScanView()
-            case .history: HistoryView()
-            }
+    private func detailView(for item: SidebarItem) -> some View {
+        switch item {
+        case .dashboard: DashboardView()
+        case .scan:      ScanView()
+        case .history:   HistoryView()
         }
-    }
-
-    private var backgroundGradient: some View {
-        LinearGradient(
-            stops: [
-                .init(color: Color(red: 0.02, green: 0.12, blue: 0.08), location: 0),
-                .init(color: Color(red: 0.0, green: 0.06, blue: 0.15), location: 0.5),
-                .init(color: Color(red: 0.05, green: 0.0, blue: 0.12), location: 1),
-            ],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
-        .ignoresSafeArea()
     }
 }
 

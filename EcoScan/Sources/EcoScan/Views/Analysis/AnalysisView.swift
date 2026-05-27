@@ -205,9 +205,9 @@ struct AnalysisView: View {
         let item = TrashItem(
             imageData: data,
             category: selectedCategory,
+            weightGrams: weightGrams,
             confidence: classificationResult?.confidence ?? 0.5
         )
-        item.weightGrams = weightGrams
         modelContext.insert(item)
 
         withAnimation { saved = true }

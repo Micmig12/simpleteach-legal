@@ -15,7 +15,7 @@ struct HistoryView: View {
     private var filteredItems: [TrashItem] {
         items.filter { item in
             if showRecyclableOnly && !item.isRecyclable { return false }
-            if let filter = selectedFilter, item.category != filter { return false }
+            if let filter = selectedFilter, item.categoryRaw != filter.rawValue { return false }
             return true
         }
     }
